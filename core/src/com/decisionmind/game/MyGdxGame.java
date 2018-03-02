@@ -38,22 +38,24 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void render () {
 
-        Gdx.gl.glClearColor(1,1,1,1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
         variation += Gdx.graphics.getDeltaTime()*10;
         fallSpeed++;
 
         if(variation > 2)
             variation = 0;
 
-        if(verticalInitialPosition > 0)
+
+        if(Gdx.input.justTouched()){
+            Gdx.app.log("Toque", "Toque na tela");
+            fallSpeed = -25;
+        }
+
+        if(verticalInitialPosition > 0 || fallSpeed < 0)
             verticalInitialPosition -= fallSpeed;
 
         batch.begin();
         batch.draw(backgroung,0,0, widthDevice, heightDevice);
         batch.draw(bird[ (int)variation ], 30, verticalInitialPosition);
         batch.end();
-	}
-
+    }
 }
