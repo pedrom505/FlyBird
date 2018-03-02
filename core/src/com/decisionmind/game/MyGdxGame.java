@@ -31,7 +31,6 @@ public class MyGdxGame extends ApplicationAdapter {
         backgroung = new Texture("fundo.png");
         widthDevice = Gdx.graphics.getWidth();
         heightDevice = Gdx.graphics.getHeight();
-
         verticalInitialPosition = heightDevice / 2;
 	}
 
