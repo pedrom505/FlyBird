@@ -17,6 +17,7 @@ public class MyGdxGame extends ApplicationAdapter {
     private Texture backgroung;
     private Texture higherPipe;
     private Texture lowerPipe;
+    private Texture badge;
     private Random rand;
 
     //configuration attributes
@@ -41,6 +42,7 @@ public class MyGdxGame extends ApplicationAdapter {
         bird[2] = new Texture("passaro3.png");
         higherPipe = new Texture("cano_topo_maior.png");
         lowerPipe = new Texture("cano_baixo_maior.png");
+        badge = new Texture("logo.png");
         rand = new Random();
 
         //configuration attributes
@@ -84,6 +86,7 @@ public class MyGdxGame extends ApplicationAdapter {
         batch.begin();
 
         batch.draw(backgroung, 0, 0, widthDevice, heightDevice);
+        batch.draw(badge, 0, heightDevice - badge.getHeight());
         batch.draw(higherPipe, horizontalPosition_Pipe, heightDevice / 2 + verticalPosition_Pipe + spaceBetweenPipes/2);
         batch.draw(lowerPipe, horizontalPosition_Pipe, heightDevice / 2 - spaceBetweenPipes/2 + verticalPosition_Pipe - lowerPipe.getHeight());
         batch.draw(bird[ (int)variation ], 30, verticalInitialPosition_Bird);
