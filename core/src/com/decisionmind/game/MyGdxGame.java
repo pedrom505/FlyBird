@@ -7,6 +7,11 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.Random;
 
@@ -21,13 +26,17 @@ public class MyGdxGame extends ApplicationAdapter {
     private Texture lowerPipe;
     private Random rand;
     private BitmapFont font;
-    private int score = 0;
-    private boolean scoreFlag = true;
+    private Circle bird_shape;
+    private Rectangle higherPipe_shape;
+    private Rectangle lowerPipe_shape;
+    //private ShapeRenderer shape;
 
     //configuration attributes
     private int widthDevice;
     private int heightDevice;
     private int gameState = 0; //0 -> game is stopped 1 -> start the game
+    private int score = 0;
+    private boolean scoreFlag = true;
 
     //Bird Variables
     private float variation = 0;
@@ -46,12 +55,18 @@ public class MyGdxGame extends ApplicationAdapter {
 	@Override
 	public void create () {
         batch = new SpriteBatch();
+        //shape = new ShapeRenderer();
+
         bird = new Texture[3];
         bird[0] = new Texture("passaro1.png");
         bird[1] = new Texture("passaro2.png");
         bird[2] = new Texture("passaro3.png");
+        bird_shape = new Circle();
+
         higherPipe = new Texture("cano_topo_maior.png");
         lowerPipe = new Texture("cano_baixo_maior.png");
+        higherPipe_shape = new Rectangle();
+        lowerPipe_shape = new Rectangle();
 
         rand = new Random();
         font = new BitmapFont();
@@ -137,5 +152,39 @@ public class MyGdxGame extends ApplicationAdapter {
         font.draw(batch, String.valueOf(score), widthDevice/2, heightDevice-heightDevice*0.02f );
 
         batch.end();
+
+        bird_shape.set(
+                horizontalPosition_Bird + bird[0].getWidth()/2,
+                verticalPosition_Bird + bird[0].getHeight()/2,
+                bird[0].getWidth() * 0.4f
+        );
+        lowerPipe_shape.set(
+                horizontalPosition_Pipe,
+                heightDevice / 2 - spaceBetweenPipes/2 + verticalPosition_Pipe - lowerPipe.getHeight(),
+                lowerPipe.getWidth(),
+                lowerPipe.getHeight()
+        );
+
+        higherPipe_shape.set(
+                horizontalPosition_Pipe,
+                heightDevice / 2 + verticalPosition_Pipe + spaceBetweenPipes/2,
+                higherPipe.getWidth(),
+                higherPipe.getHeight()
+        );
+
+        //Drawing the shapes
+        /*shape.begin(ShapeRenderer.ShapeType.Filled);
+
+        shape.circle(bird_shape.x, bird_shape.y, bird_shape.radius);
+        shape.rect(lowerPipe_shape.x, lowerPipe_shape.y, lowerPipe_shape.width, lowerPipe_shape.height);
+        shape.rect(higherPipe_shape.x, higherPipe_shape.y, higherPipe_shape.width, higherPipe_shape.height);
+
+        shape.end();*/
+
+        if(Intersector.overlaps(bird_shape,lowerPipe_shape) || Intersector.overlaps(bird_shape,higherPipe_shape)){
+            gameState = 0;
+            Gdx.app.log("Colisão", "Houve uma colisão");
+        }
+
     }
 }
