@@ -67,8 +67,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
         gameover = new Texture("game_over.png");
 
-        higherWall = new Texture("cano_topo_maior.png");
-        lowerWall = new Texture("cano_baixo_maior.png");
+        higherWall = new Texture("cano_maior.png");
+        lowerWall = new Texture("cano_maior.png");
         higherWall_shape = new Rectangle();
         lowerWall_shape = new Rectangle();
 
