@@ -22,19 +22,21 @@ public class MyGdxGame extends ApplicationAdapter {
     private SpriteBatch batch;
     private Texture[] bird;
     private Texture backgroung;
-    private Texture higherPipe;
-    private Texture lowerPipe;
+    private Texture higherWall;
+    private Texture lowerWall;
+    private Texture gameover;
     private Random rand;
     private BitmapFont font;
+    private BitmapFont message;
     private Circle bird_shape;
-    private Rectangle higherPipe_shape;
-    private Rectangle lowerPipe_shape;
+    private Rectangle higherWall_shape;
+    private Rectangle lowerWall_shape;
     //private ShapeRenderer shape;
 
     //configuration attributes
     private int widthDevice;
     private int heightDevice;
-    private int gameState = 0; //0 -> game is stopped 1 -> start the game
+    private int gameState = 0; //0 -> game is stopped 1 -> start the game 2 -> game over
     private int score = 0;
     private boolean scoreFlag = true;
 
@@ -45,9 +47,9 @@ public class MyGdxGame extends ApplicationAdapter {
     private float verticalPosition_Bird;
     private float horizontalPosition_Bird = 120;
 
-    private float verticalPosition_Pipe;
-    private float horizontalPosition_Pipe;
-    private float spaceBetweenPipes = 300;
+    private float verticalPosition_Wall;
+    private float horizontalPosition_Wall;
+    private int spaceBetweenWalls;
     private int verticalPositionLimit;
 
     private float deltaTime;
@@ -63,15 +65,21 @@ public class MyGdxGame extends ApplicationAdapter {
         bird[2] = new Texture("passaro3.png");
         bird_shape = new Circle();
 
-        higherPipe = new Texture("cano_topo_maior.png");
-        lowerPipe = new Texture("cano_baixo_maior.png");
-        higherPipe_shape = new Rectangle();
-        lowerPipe_shape = new Rectangle();
+        gameover = new Texture("game_over.png");
+
+        higherWall = new Texture("cano_topo_maior.png");
+        lowerWall = new Texture("cano_baixo_maior.png");
+        higherWall_shape = new Rectangle();
+        lowerWall_shape = new Rectangle();
 
         rand = new Random();
         font = new BitmapFont();
         font.setColor(Color.WHITE);
         font.getData().setScale(6);
+
+        message = new BitmapFont();
+        message.setColor(Color.WHITE);
+        message.getData().setScale(3);
 
 
         //configuration attributes
@@ -79,9 +87,10 @@ public class MyGdxGame extends ApplicationAdapter {
         widthDevice = Gdx.graphics.getWidth();
         heightDevice = Gdx.graphics.getHeight();
 
-        verticalPositionLimit = (int) (lowerPipe.getHeight() + spaceBetweenPipes/2 - heightDevice/2);
-        horizontalPosition_Pipe = widthDevice;
-        verticalPosition_Pipe = 0;
+        spaceBetweenWalls = rand.nextInt(200) + 300;
+        verticalPositionLimit = lowerWall.getHeight() + spaceBetweenWalls/2 - heightDevice/2;
+        horizontalPosition_Wall = widthDevice;
+        verticalPosition_Wall = 0;
         verticalPosition_Bird = heightDevice / 2;
 
 	}
@@ -103,35 +112,51 @@ public class MyGdxGame extends ApplicationAdapter {
             }
         }else{
 
-            //
-            horizontalPosition_Pipe -= deltaTime * 500;
             fallSpeed++;
 
-            //Restart the pipe position when it cross the screen
-            if(horizontalPosition_Pipe < -higherPipe.getWidth()){
-                horizontalPosition_Pipe = widthDevice;
-                verticalPosition_Pipe = rand.nextInt(verticalPositionLimit*2) - verticalPositionLimit;
-                scoreFlag = true;
-            }
+            if(gameState == 1){
+                horizontalPosition_Wall -= deltaTime * 500;
 
-            //Detects when the bird passes through the pipe
-            if(horizontalPosition_Pipe < horizontalPosition_Bird){
-                if (scoreFlag){
-                    scoreFlag = false;
-                    score++;
+
+
+                //Restart the Wall position when it cross the screen
+                if(horizontalPosition_Wall < -higherWall.getWidth()){
+                    horizontalPosition_Wall = widthDevice;
+                    spaceBetweenWalls = rand.nextInt(200) + 300;
+                    verticalPositionLimit = lowerWall.getHeight() + spaceBetweenWalls/2 - heightDevice/2;
+                    verticalPosition_Wall = rand.nextInt(verticalPositionLimit*2) - verticalPositionLimit;
+                    scoreFlag = true;
+                }
+
+                //Detects when the bird passes through the Wall
+                if(horizontalPosition_Wall < horizontalPosition_Bird){
+                    if (scoreFlag){
+                        scoreFlag = false;
+                        score++;
+                    }
+                }
+
+                //Detect the touch event
+                if(Gdx.input.justTouched()){
+                    gameState = 1;
+                    fallSpeed = -20;
+                }
+
+            }else { // Game over screen
+                if(Gdx.input.justTouched()){
+                    gameState = 0;
+                    score = 0;
+                    scoreFlag = true;
+                    horizontalPosition_Wall = widthDevice;
+                    spaceBetweenWalls = rand.nextInt(200) + 300;
+                    verticalPositionLimit = lowerWall.getHeight() + spaceBetweenWalls/2 - heightDevice/2;
+                    verticalPosition_Wall = rand.nextInt(verticalPositionLimit*2) - verticalPositionLimit;
+                    verticalPosition_Bird = heightDevice / 2;
+                    fallSpeed = 0;
                 }
             }
 
-            //Detect the touch event
-            if(Gdx.input.justTouched()){
-                gameState = 1;
-                fallSpeed = -20;
-            }
-
-
-            //if(verticalPosition_Bird > 5 || fallSpeed < 0)
             verticalPosition_Bird -= fallSpeed;
-
             if(verticalPosition_Bird < 0){
                 verticalPosition_Bird = 0;
             }
@@ -146,10 +171,15 @@ public class MyGdxGame extends ApplicationAdapter {
         batch.begin();
 
         batch.draw(backgroung, 0, 0, widthDevice, heightDevice);
-        batch.draw(higherPipe, horizontalPosition_Pipe, heightDevice / 2 + verticalPosition_Pipe + spaceBetweenPipes/2);
-        batch.draw(lowerPipe, horizontalPosition_Pipe, heightDevice / 2 - spaceBetweenPipes/2 + verticalPosition_Pipe - lowerPipe.getHeight());
+        batch.draw(higherWall, horizontalPosition_Wall, heightDevice / 2 + verticalPosition_Wall + spaceBetweenWalls/2);
+        batch.draw(lowerWall, horizontalPosition_Wall, heightDevice / 2 - spaceBetweenWalls/2 + verticalPosition_Wall - lowerWall.getHeight());
         batch.draw(bird[ (int)variation ], horizontalPosition_Bird, verticalPosition_Bird);
         font.draw(batch, String.valueOf(score), widthDevice/2, heightDevice-heightDevice*0.02f );
+
+        if(gameState == 2){
+            batch.draw(gameover, widthDevice/2 - gameover.getWidth()/2, heightDevice/2);
+            message.draw(batch, "Pressione para jogar novamente",widthDevice/2 - 200, heightDevice/2);
+        }
 
         batch.end();
 
@@ -158,32 +188,22 @@ public class MyGdxGame extends ApplicationAdapter {
                 verticalPosition_Bird + bird[0].getHeight()/2,
                 bird[0].getWidth() * 0.4f
         );
-        lowerPipe_shape.set(
-                horizontalPosition_Pipe,
-                heightDevice / 2 - spaceBetweenPipes/2 + verticalPosition_Pipe - lowerPipe.getHeight(),
-                lowerPipe.getWidth(),
-                lowerPipe.getHeight()
+        lowerWall_shape.set(
+                horizontalPosition_Wall,
+                heightDevice / 2 - spaceBetweenWalls/2 + verticalPosition_Wall - lowerWall.getHeight(),
+                lowerWall.getWidth(),
+                lowerWall.getHeight()
         );
 
-        higherPipe_shape.set(
-                horizontalPosition_Pipe,
-                heightDevice / 2 + verticalPosition_Pipe + spaceBetweenPipes/2,
-                higherPipe.getWidth(),
-                higherPipe.getHeight()
+        higherWall_shape.set(
+                horizontalPosition_Wall,
+                heightDevice / 2 + verticalPosition_Wall + spaceBetweenWalls/2,
+                higherWall.getWidth(),
+                higherWall.getHeight()
         );
 
-        //Drawing the shapes
-        /*shape.begin(ShapeRenderer.ShapeType.Filled);
-
-        shape.circle(bird_shape.x, bird_shape.y, bird_shape.radius);
-        shape.rect(lowerPipe_shape.x, lowerPipe_shape.y, lowerPipe_shape.width, lowerPipe_shape.height);
-        shape.rect(higherPipe_shape.x, higherPipe_shape.y, higherPipe_shape.width, higherPipe_shape.height);
-
-        shape.end();*/
-
-        if(Intersector.overlaps(bird_shape,lowerPipe_shape) || Intersector.overlaps(bird_shape,higherPipe_shape)){
-            gameState = 0;
-            Gdx.app.log("Colisão", "Houve uma colisão");
+        if(Intersector.overlaps(bird_shape,lowerWall_shape) || Intersector.overlaps(bird_shape,higherWall_shape)){
+            gameState = 2;
         }
 
     }
