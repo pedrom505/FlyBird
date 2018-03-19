@@ -3,19 +3,15 @@ package com.decisionmind.game;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.decisionmind.objects.Bird;
 
 import java.util.Random;
-
-import javax.xml.soap.Text;
 
 public class MyGdxGame extends ApplicationAdapter {
 
@@ -45,12 +41,11 @@ public class MyGdxGame extends ApplicationAdapter {
     private float fallSpeed = 0;
 
     private float verticalPosition_Bird;
-    private float horizontalPosition_Bird = 120;
+    private float horizontalPosition_Bird = 50;
 
-    private float verticalPosition_Wall;
     private float horizontalPosition_Wall;
     private int spaceBetweenWalls;
-    private int verticalPositionLimit;
+    private int centerOfWalls;
 
     private float deltaTime;
 	
@@ -87,10 +82,10 @@ public class MyGdxGame extends ApplicationAdapter {
         widthDevice = Gdx.graphics.getWidth();
         heightDevice = Gdx.graphics.getHeight();
 
-        spaceBetweenWalls = rand.nextInt(200) + 300;
-        verticalPositionLimit = lowerWall.getHeight() + spaceBetweenWalls/2 - heightDevice/2;
+        spaceBetweenWalls = rand.nextInt(150) + 200;
+        centerOfWalls = rand.nextInt(heightDevice - 40 - spaceBetweenWalls) + spaceBetweenWalls/2 + 20;
+
         horizontalPosition_Wall = widthDevice;
-        verticalPosition_Wall = 0;
         verticalPosition_Bird = heightDevice / 2;
 
 	}
@@ -115,16 +110,15 @@ public class MyGdxGame extends ApplicationAdapter {
             fallSpeed++;
 
             if(gameState == 1){
-                horizontalPosition_Wall -= deltaTime * 500;
+                horizontalPosition_Wall -= deltaTime * widthDevice*0.5;
 
 
 
                 //Restart the Wall position when it cross the screen
                 if(horizontalPosition_Wall < -higherWall.getWidth()){
                     horizontalPosition_Wall = widthDevice;
-                    spaceBetweenWalls = rand.nextInt(200) + 300;
-                    verticalPositionLimit = lowerWall.getHeight() + spaceBetweenWalls/2 - heightDevice/2;
-                    verticalPosition_Wall = rand.nextInt(verticalPositionLimit*2) - verticalPositionLimit;
+                    spaceBetweenWalls = rand.nextInt(150) + 200;
+                    centerOfWalls = rand.nextInt(heightDevice - 40 - spaceBetweenWalls) + spaceBetweenWalls/2 + 20;
                     scoreFlag = true;
                 }
 
@@ -139,7 +133,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 //Detect the touch event
                 if(Gdx.input.justTouched()){
                     gameState = 1;
-                    fallSpeed = -20;
+                    fallSpeed = -15;
                 }
 
             }else { // Game over screen
@@ -148,9 +142,9 @@ public class MyGdxGame extends ApplicationAdapter {
                     score = 0;
                     scoreFlag = true;
                     horizontalPosition_Wall = widthDevice;
-                    spaceBetweenWalls = rand.nextInt(200) + 300;
-                    verticalPositionLimit = lowerWall.getHeight() + spaceBetweenWalls/2 - heightDevice/2;
-                    verticalPosition_Wall = rand.nextInt(verticalPositionLimit*2) - verticalPositionLimit;
+                    spaceBetweenWalls = rand.nextInt(150) + 200;
+                    centerOfWalls = rand.nextInt(heightDevice - 40 - spaceBetweenWalls) + spaceBetweenWalls/2 + 20;
+
                     verticalPosition_Bird = heightDevice / 2;
                     fallSpeed = 0;
                 }
@@ -171,14 +165,17 @@ public class MyGdxGame extends ApplicationAdapter {
         batch.begin();
 
         batch.draw(backgroung, 0, 0, widthDevice, heightDevice);
-        batch.draw(higherWall, horizontalPosition_Wall, heightDevice / 2 + verticalPosition_Wall + spaceBetweenWalls/2);
-        batch.draw(lowerWall, horizontalPosition_Wall, heightDevice / 2 - spaceBetweenWalls/2 + verticalPosition_Wall - lowerWall.getHeight());
+
+        //batch.draw(higherWall, horizontalPosition_Wall, heightDevice / 2 + verticalPosition_Wall + spaceBetweenWalls/2);
+
+        batch.draw(higherWall, horizontalPosition_Wall, centerOfWalls+spaceBetweenWalls/2);
+        batch.draw(lowerWall, horizontalPosition_Wall, centerOfWalls-spaceBetweenWalls/2-lowerWall.getHeight());
         batch.draw(bird[ (int)variation ], horizontalPosition_Bird, verticalPosition_Bird);
         font.draw(batch, String.valueOf(score), widthDevice/2, heightDevice-heightDevice*0.02f );
 
         if(gameState == 2){
             batch.draw(gameover, widthDevice/2 - gameover.getWidth()/2, heightDevice/2);
-            message.draw(batch, "Pressione para jogar novamente",widthDevice/2 - 200, heightDevice/2);
+            message.draw(batch, "Pressione para jogar",widthDevice/2 - 200, heightDevice/2);
         }
 
         batch.end();
@@ -190,14 +187,14 @@ public class MyGdxGame extends ApplicationAdapter {
         );
         lowerWall_shape.set(
                 horizontalPosition_Wall,
-                heightDevice / 2 - spaceBetweenWalls/2 + verticalPosition_Wall - lowerWall.getHeight(),
+                centerOfWalls-spaceBetweenWalls/2-lowerWall.getHeight(),
                 lowerWall.getWidth(),
                 lowerWall.getHeight()
         );
 
         higherWall_shape.set(
                 horizontalPosition_Wall,
-                heightDevice / 2 + verticalPosition_Wall + spaceBetweenWalls/2,
+                centerOfWalls+spaceBetweenWalls/2,
                 higherWall.getWidth(),
                 higherWall.getHeight()
         );
@@ -207,4 +204,8 @@ public class MyGdxGame extends ApplicationAdapter {
         }
 
     }
+
+
+
+
 }
