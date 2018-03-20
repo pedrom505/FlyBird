@@ -10,24 +10,20 @@ import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
 import com.decisionmind.objects.Bird;
+import com.decisionmind.objects.Obstacle;
 
 import java.util.Random;
 
 public class MyGdxGame extends ApplicationAdapter {
 
     private SpriteBatch batch;
-    private Texture[] bird;
     private Texture backgroung;
-    private Texture higherWall;
-    private Texture lowerWall;
     private Texture gameover;
-    private Random rand;
     private BitmapFont font;
     private BitmapFont message;
-    private Circle bird_shape;
-    private Rectangle higherWall_shape;
-    private Rectangle lowerWall_shape;
-    //private ShapeRenderer shape;
+
+    private Obstacle obstable;
+    private Bird bird;
 
     //configuration attributes
     private int widthDevice;
@@ -35,39 +31,20 @@ public class MyGdxGame extends ApplicationAdapter {
     private int gameState = 0; //0 -> game is stopped 1 -> start the game 2 -> game over
     private int score = 0;
     private boolean scoreFlag = true;
-
-    //Bird Variables
-    private float variation = 0;
-    private float fallSpeed = 0;
-
-    private float verticalPosition_Bird;
-    private float horizontalPosition_Bird = 50;
-
-    private float horizontalPosition_Wall;
-    private int spaceBetweenWalls;
-    private int centerOfWalls;
-
     private float deltaTime;
 	
 	@Override
 	public void create () {
         batch = new SpriteBatch();
-        //shape = new ShapeRenderer();
 
-        bird = new Texture[3];
-        bird[0] = new Texture("passaro1.png");
-        bird[1] = new Texture("passaro2.png");
-        bird[2] = new Texture("passaro3.png");
-        bird_shape = new Circle();
+        widthDevice = Gdx.graphics.getWidth();
+        heightDevice = Gdx.graphics.getHeight();
 
         gameover = new Texture("game_over.png");
 
-        higherWall = new Texture("cano_maior.png");
-        lowerWall = new Texture("cano_maior.png");
-        higherWall_shape = new Rectangle();
-        lowerWall_shape = new Rectangle();
+        obstable = new Obstacle( widthDevice, heightDevice);
+        bird = new Bird( widthDevice, heightDevice);
 
-        rand = new Random();
         font = new BitmapFont();
         font.setColor(Color.WHITE);
         font.getData().setScale(6);
@@ -79,14 +56,6 @@ public class MyGdxGame extends ApplicationAdapter {
 
         //configuration attributes
         backgroung = new Texture("fundo.png");
-        widthDevice = Gdx.graphics.getWidth();
-        heightDevice = Gdx.graphics.getHeight();
-
-        spaceBetweenWalls = rand.nextInt(150) + 200;
-        centerOfWalls = rand.nextInt(heightDevice - 40 - spaceBetweenWalls) + spaceBetweenWalls/2 + 20;
-
-        horizontalPosition_Wall = widthDevice;
-        verticalPosition_Bird = heightDevice / 2;
 
 	}
 
@@ -95,10 +64,7 @@ public class MyGdxGame extends ApplicationAdapter {
 
         deltaTime = Gdx.graphics.getDeltaTime();
 
-        variation += deltaTime * 10;
-
-        if(variation > 2)
-            variation = 0;
+        bird.flapWings(deltaTime);
 
         if(gameState == 0) {
             //Wait for the first touch of the user to start the game
@@ -107,23 +73,18 @@ public class MyGdxGame extends ApplicationAdapter {
             }
         }else{
 
-            fallSpeed++;
+            bird.fall();
 
             if(gameState == 1){
-                horizontalPosition_Wall -= deltaTime * widthDevice*0.5;
-
-
 
                 //Restart the Wall position when it cross the screen
-                if(horizontalPosition_Wall < -higherWall.getWidth()){
-                    horizontalPosition_Wall = widthDevice;
-                    spaceBetweenWalls = rand.nextInt(150) + 200;
-                    centerOfWalls = rand.nextInt(heightDevice - 40 - spaceBetweenWalls) + spaceBetweenWalls/2 + 20;
+                if(!obstable.shiftObstable(deltaTime)){
+                    obstable = new Obstacle( widthDevice, heightDevice);
                     scoreFlag = true;
                 }
 
                 //Detects when the bird passes through the Wall
-                if(horizontalPosition_Wall < horizontalPosition_Bird){
+                if(obstable.higherWall.getHorizontalPosition() < bird.getHorizontalPosition()){
                     if (scoreFlag){
                         scoreFlag = false;
                         score++;
@@ -133,7 +94,7 @@ public class MyGdxGame extends ApplicationAdapter {
                 //Detect the touch event
                 if(Gdx.input.justTouched()){
                     gameState = 1;
-                    fallSpeed = -15;
+                    bird.goUp();
                 }
 
             }else { // Game over screen
@@ -141,22 +102,9 @@ public class MyGdxGame extends ApplicationAdapter {
                     gameState = 0;
                     score = 0;
                     scoreFlag = true;
-                    horizontalPosition_Wall = widthDevice;
-                    spaceBetweenWalls = rand.nextInt(150) + 200;
-                    centerOfWalls = rand.nextInt(heightDevice - 40 - spaceBetweenWalls) + spaceBetweenWalls/2 + 20;
-
-                    verticalPosition_Bird = heightDevice / 2;
-                    fallSpeed = 0;
+                    obstable = new Obstacle( widthDevice, heightDevice);
+                    bird = new Bird( widthDevice, heightDevice);
                 }
-            }
-
-            verticalPosition_Bird -= fallSpeed;
-            if(verticalPosition_Bird < 0){
-                verticalPosition_Bird = 0;
-            }
-            if(verticalPosition_Bird > heightDevice - bird[0].getHeight()){
-                verticalPosition_Bird = heightDevice - bird[0].getHeight();
-                fallSpeed = 0;
             }
 
         }
@@ -168,9 +116,9 @@ public class MyGdxGame extends ApplicationAdapter {
 
         //batch.draw(higherWall, horizontalPosition_Wall, heightDevice / 2 + verticalPosition_Wall + spaceBetweenWalls/2);
 
-        batch.draw(higherWall, horizontalPosition_Wall, centerOfWalls+spaceBetweenWalls/2);
-        batch.draw(lowerWall, horizontalPosition_Wall, centerOfWalls-spaceBetweenWalls/2-lowerWall.getHeight());
-        batch.draw(bird[ (int)variation ], horizontalPosition_Bird, verticalPosition_Bird);
+        batch.draw(obstable.lowerWall.getTexture(), obstable.lowerWall.getHorizontalPosition(), obstable.lowerWall.getVerticalPositivon());
+        batch.draw(obstable.higherWall.getTexture(), obstable.higherWall.getHorizontalPosition(), obstable.higherWall.getVerticalPositivon());
+        batch.draw(bird.getTexture(), bird.getHorizontalPosition(), bird.getVerticalPosition());
         font.draw(batch, String.valueOf(score), widthDevice/2, heightDevice-heightDevice*0.02f );
 
         if(gameState == 2){
@@ -180,26 +128,8 @@ public class MyGdxGame extends ApplicationAdapter {
 
         batch.end();
 
-        bird_shape.set(
-                horizontalPosition_Bird + bird[0].getWidth()/2,
-                verticalPosition_Bird + bird[0].getHeight()/2,
-                bird[0].getWidth() * 0.4f
-        );
-        lowerWall_shape.set(
-                horizontalPosition_Wall,
-                centerOfWalls-spaceBetweenWalls/2-lowerWall.getHeight(),
-                lowerWall.getWidth(),
-                lowerWall.getHeight()
-        );
-
-        higherWall_shape.set(
-                horizontalPosition_Wall,
-                centerOfWalls+spaceBetweenWalls/2,
-                higherWall.getWidth(),
-                higherWall.getHeight()
-        );
-
-        if(Intersector.overlaps(bird_shape,lowerWall_shape) || Intersector.overlaps(bird_shape,higherWall_shape)){
+        if(Intersector.overlaps(bird.getShape(),obstable.lowerWall.getShape())
+                || Intersector.overlaps(bird.getShape(),obstable.higherWall.getShape())){
             gameState = 2;
         }
 
